@@ -1,4 +1,3 @@
-# DB-OLA3
 # **Performance Analysis Report: Optimistic vs. Pessimistic Concurrency Control**
 
 ## **📝 Student Names: [Your Names]**
@@ -84,6 +83,28 @@ INSERT INTO Tournament_Registrations (tournament_id, player_id) VALUES
 
 INSERT INTO Tournament_Registrations (tournament_id, player_id) VALUES
 (2, 2);
+
+DELIMITER $$
+
+CREATE PROCEDURE UpdatePlayerRanking(IN player_id INT,IN increment_value INT)
+BEGIN
+    DECLARE current_ranking INT;
+    START TRANSACTION;
+
+    SELECT ranking INTO current_ranking 
+    FROM Players 
+    WHERE player_id = player_id 
+    FOR UPDATE;
+    UPDATE Players 
+     SET ranking = ranking + increment_value
+    WHERE player_id = player_id;
+
+    COMMIT;
+END $$
+
+DELIMITER ;
+
+
 ```
 
 ### **Concurrency Control Techniques Implemented:**
@@ -130,13 +151,13 @@ INSERT INTO Tournament_Registrations (tournament_id, player_id) VALUES
 
 ---
 
-## **📌 Comparison Table**
-| **Metric**               | **Optimistic CC** | **Pessimistic CC** |
-|--------------------------|------------------|------------------|
-| **Execution Time**       | [Your Value] | [Your Value] |
-| **Transaction Failures** | [Your Value] | [Your Value] |
-| **Lock Contention**      | [Your Value] | [Your Value] |
-| **Best Use Case**       | [Your Value] | [Your Value] |
+| Metric                     | Optimistic CC (OCC)                                | Pessimistic CC (PCC)                          |
+|----------------------------|---------------------------------------------------|-----------------------------------------------|
+| Execution Time             | Hurtigere (5.61-11.36 sek for 100 tråde)          | Langsommere (Pga. låse, ventetider)          |
+| Transaction Success Rate   | Lavere (90/100 eller 9/100 succes)                | Højere (Sikrer succes via låse)              |
+| Lock Contention           | Ingen/lav (Ingen låse, men version-mismatch)      | Høj (Rækker er låst, ventetid øges)         |
+| Best Use Case              | Læs-tunge systemer (Få samtidige opdateringer, fx rapporter) | Skriv-tunge systemer (Hyppige opdateringer, fx banktransaktioner) |
+
 
 ---
 
