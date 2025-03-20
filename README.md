@@ -1,4 +1,4 @@
-# **Performance Analysis Report: Optimistic vs. Pessimistic Concurrency Control**
+# **Part 1: Performance Analysis Report: Optimistic vs. Pessimistic Concurrency Control**
 
 ## **📝 Student Names: Rabee, Kevin og Ermin**
 
@@ -156,9 +156,144 @@ DELIMITER ;
 | Lock Contention           | Ingen/lav (Ingen låse, men version-mismatch)      | Høj (Rækker er låst, ventetid øges)         |
 | Best Use Case              | Læs-tunge systemer (Få samtidige opdateringer, fx rapporter) | Skriv-tunge systemer (Hyppige opdateringer, fx banktransaktioner) |
 
-# Refleksion over Databaseoptimering
+# **Part 2: Denormalization & Partitions & Query Optimization**
 
-## Samtidighedskontrol: Optimistisk vs. Pessimistisk
+# Denormalizing Total Sales per Order
+```sql
+CREATE TABLE Orders (
+    order_id INT PRIMARY KEY AUTO_INCREMENT,
+    customer_id INT,
+    order_date DATE
+);
+
+CREATE TABLE OrderDetails (
+    order_detail_id INT PRIMARY KEY AUTO_INCREMENT,
+    order_id INT,
+    product_id INT,
+    quantity INT,
+    price DECIMAL(10,2),
+    FOREIGN KEY (order_id) REFERENCES Orders(order_id)
+);
+```
+```sql
+ALTER TABLE Orders ADD COLUMN total_amount DECIMAL(10,2);
+
+UPDATE Orders o
+SET total_amount = (
+    SELECT SUM(quantity * price)
+    FROM OrderDetails
+    WHERE order_id = o.order_id
+);
+```
+## What are the performance benefits of this approach?
+Ved at denormalisere vores total sales per order bliver databasen hurtigere, og vi undgår at bruge joins, som ellers ville gøre databasen langsommere.
+
+## How should we ensure the totalAmount stays accurate when an order is updated?
+Vi benytter os af en trigger, som aktiveres hver gang der sker en opdatering på enten order quantity eller order price.
+
+---
+
+# Denormalizing Customer Data in Orders
+```sql
+CREATE TABLE Customers (
+    customer_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100)
+);
+
+CREATE TABLE Orders (
+    order_id INT PRIMARY KEY AUTO_INCREMENT,
+    customer_id INT,
+    order_date DATE,
+    FOREIGN KEY (customer_id) REFERENCES Customers(customer_id)
+);
+```
+```sql
+ALTER TABLE Orders ADD COLUMN customer_name VARCHAR(100);
+ALTER TABLE Orders ADD COLUMN customer_email VARCHAR(100);
+
+UPDATE Orders o
+JOIN Customers c ON o.customer_id = c.customer_id
+SET o.customer_name = c.name, o.customer_email = c.email;
+```
+```sql
+```
+## When would this denormalization be useful?
+Denormaliseringen gør, at vi ikke har et lige så stort behov for joins i vores database.  
+Det ville være nyttigt, når vi har kundedata, der ikke opdateres ofte.
+
+## How should updates to Customers be handled in this case?
+Vi ville benytte os af triggere, der opdaterer kundedata i vores ordre-tabel.
+
+---
+
+# Using Partitioning for Sales Data
+
+## How does partitioning improve query speed?
+Ved at opdele data kan MySQL kun søge i den relevante partition, hvilket reducerer mængden af data, som skal scannes.  
+Store tabeller bliver lettere at administrere ved at opdele dem i mindre enheder.  
+Data placeres i partitioner baseret på en given kolonne, hvor vi kan hente data direkte fra kolonnen.
+
+## Why does MySQL not allow foreign keys in partitioned tables?
+MySQL tillader ikke fremmednøgler i partitionerede tabeller, fordi det skaber problemer med at opretholde referentiel integritet på tværs af partitioner.
+
+## What happens when a new year starts?
+Når et nyt år starter, skal man manuelt tilføje en ny partition for det kommende år, så data bliver partitioneret korrekt.
+
+---
+
+# Using List Partitioning for Regional Data
+
+## What types of queries does list partitioning optimize?
+List partitioning optimerer queries, der er baseret på regioner.
+
+## What if a new region needs to be added?
+Hvis man skal tilføje en ny region, kan man bruge `ALTER TABLE` og manuelt tilføje den nye region.
+
+## How does list partitioning compare to range partitioning?
+- **List partitioning** er bedst, når vi vil opdele data i kategorier, f.eks. varegrupper eller regioner.  
+- **Range partitioning** er bedst, når vi arbejder med tid (f.eks. år, årtier, dage osv.).
+
+---
+
+# 📌 1. Running Queries on Partitioned Data
+- **Without partition**
+- **With partition**
+
+---
+
+# 📌 2. Running EXPLAIN ANALYZE
+
+### Expected Outcome:
+✅ The query scans the entire table.  
+⁉️ The rows examined count will be high, especially for large datasets.  
+
+---
+
+# 📌 3. Running EXPLAIN ANALYZE With Partition Selection
+
+### Expected Improvement:
+- The rows examined count should be significantly lower.  
+- The query execution time should be faster.  
+
+---
+
+# 📌 4. Key Metrics to Compare
+
+| Metric            | Without partitioning 🔴 | With partitioning 🟢 |
+|-------------------|----------------------|----------------------|
+| **Rows examined**  | High (Full scan)     | High (Partition Scan) |
+| **Execution Time** | Slower (Full Table Scan) | Faster (Partition Pruning) |
+| **Index Usage**    | Didn't use index (Could be full scan) | Can use index (if indexed partitions) |
+| **Query complexity** | Higher complexity (Full scan, no pruning) | Lower Complexity (Partition Pruning) |
+
+---
+
+# 📌 5. Viewing Query Execution Plan in MySQL Workbench
+
+## Refleksion over Databaseoptimering
+
+### Samtidighedskontrol: Optimistisk vs. Pessimistisk
 
 Samtidighedskontrol er afgørende i databaser for at sikre dataintegritet, når flere transaktioner udføres samtidigt.  
 Optimistisk samtidighedskontrol antager, at konflikter er sjældne og tillader transaktioner at køre uden låsning, men verificerer ved commit, om der er sket konflikter.  
@@ -168,7 +303,7 @@ Dette er effektivt i miljøer med lav konfliktfrekvens, da det reducerer venteti
 Pessimistisk samtidighedskontrol, derimod, låser data, når en transaktion begynder, hvilket forhindrer andre i at ændre de låste data, indtil låsen frigives.  
 Dette sikrer dataintegritet i miljøer med høj konfliktfrekvens, men kan føre til øget ventetid og potentiale for deadlocks.  
 
-## Denormalisering og Partitionering
+### Denormalisering og Partitionering
 
 Denormalisering indebærer bevidst at introducere redundans i databasedesign for at forbedre læseydelsen.  
 Ved at have duplikerede data kan systemet reducere behovet for komplekse joins, hvilket accelererer læseoperationer.  
@@ -178,7 +313,7 @@ Partitionering deler en stor tabel op i mindre, mere håndterbare segmenter.
 Dette kan forbedre ydeevnen ved at reducere mængden af data, der skal scannes under forespørgsler, og ved at fordele data over forskellige lagerenheder.  
 Der er forskellige partitioneringsstrategier, såsom **horisontal partitionering** (baseret på rækker) og **vertikal partitionering** (baseret på kolonner).  
 
-## Forespørgselsoptimering
+### Forespørgselsoptimering
 
 Forespørgselsoptimering fokuserer på at forbedre effektiviteten af databaseforespørgsler.  
 Dette kan opnås gennem forskellige teknikker, såsom:  
@@ -187,7 +322,7 @@ Dette kan opnås gennem forskellige teknikker, såsom:
 - **Omskrivning af forespørgsler**: Ved at omstrukturere forespørgsler kan man reducere kompleksiteten og forbedre ydeevnen.  
 - **Analyse af forespørgselsplaner**: Ved at studere, hvordan databasen planlægger at udføre en forespørgsel, kan man identificere og adressere ineffektiviteter.  
 
-## Refleksion over Databaseoptimering
+### Refleksion over Databaseoptimering
 
 Gennem arbejdet med ovenstående emner bliver det klart, at databaseoptimering er en balancegang mellem forskellige faktorer.  
 For eksempel kan denormalisering forbedre læseydelsen, men det kræver omhyggelig styring for at undgå inkonsistens i data.  
