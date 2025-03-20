@@ -156,3 +156,42 @@ DELIMITER ;
 | Lock Contention           | Ingen/lav (Ingen låse, men version-mismatch)      | Høj (Rækker er låst, ventetid øges)         |
 | Best Use Case              | Læs-tunge systemer (Få samtidige opdateringer, fx rapporter) | Skriv-tunge systemer (Hyppige opdateringer, fx banktransaktioner) |
 
+# Refleksion over Databaseoptimering
+
+## Samtidighedskontrol: Optimistisk vs. Pessimistisk
+
+Samtidighedskontrol er afgørende i databaser for at sikre dataintegritet, når flere transaktioner udføres samtidigt.  
+Optimistisk samtidighedskontrol antager, at konflikter er sjældne og tillader transaktioner at køre uden låsning, men verificerer ved commit, om der er sket konflikter.  
+Hvis der opdages en konflikt, rulles transaktionen tilbage.  
+Dette er effektivt i miljøer med lav konfliktfrekvens, da det reducerer ventetid for ressourcer.  
+
+Pessimistisk samtidighedskontrol, derimod, låser data, når en transaktion begynder, hvilket forhindrer andre i at ændre de låste data, indtil låsen frigives.  
+Dette sikrer dataintegritet i miljøer med høj konfliktfrekvens, men kan føre til øget ventetid og potentiale for deadlocks.  
+
+## Denormalisering og Partitionering
+
+Denormalisering indebærer bevidst at introducere redundans i databasedesign for at forbedre læseydelsen.  
+Ved at have duplikerede data kan systemet reducere behovet for komplekse joins, hvilket accelererer læseoperationer.  
+Ulempen er, at det kan øge kompleksiteten ved skriveoperationer og vedligeholdelse af dataintegritet.  
+
+Partitionering deler en stor tabel op i mindre, mere håndterbare segmenter.  
+Dette kan forbedre ydeevnen ved at reducere mængden af data, der skal scannes under forespørgsler, og ved at fordele data over forskellige lagerenheder.  
+Der er forskellige partitioneringsstrategier, såsom **horisontal partitionering** (baseret på rækker) og **vertikal partitionering** (baseret på kolonner).  
+
+## Forespørgselsoptimering
+
+Forespørgselsoptimering fokuserer på at forbedre effektiviteten af databaseforespørgsler.  
+Dette kan opnås gennem forskellige teknikker, såsom:  
+
+- **Brug af indekser**: Indekser kan dramatisk reducere søgetiden for forespørgsler ved at give hurtig adgang til data.  
+- **Omskrivning af forespørgsler**: Ved at omstrukturere forespørgsler kan man reducere kompleksiteten og forbedre ydeevnen.  
+- **Analyse af forespørgselsplaner**: Ved at studere, hvordan databasen planlægger at udføre en forespørgsel, kan man identificere og adressere ineffektiviteter.  
+
+## Refleksion over Databaseoptimering
+
+Gennem arbejdet med ovenstående emner bliver det klart, at databaseoptimering er en balancegang mellem forskellige faktorer.  
+For eksempel kan denormalisering forbedre læseydelsen, men det kræver omhyggelig styring for at undgå inkonsistens i data.  
+Ligeledes kan valg mellem optimistisk og pessimistisk samtidighedskontrol afhænge af den specifikke applikations behov og det forventede niveau af datakonflikter.  
+
+Implementering af disse teknikker kræver en dyb forståelse af både databasedesign og de specifikke behov i den anvendte applikation.  
+Ved at anvende passende optimeringsstrategier kan man opnå betydelige forbedringer i systemets ydeevne og pålidelighed.  
