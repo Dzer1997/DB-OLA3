@@ -1,6 +1,6 @@
 # **Performance Analysis Report: Optimistic vs. Pessimistic Concurrency Control**
 
-## **📝 Student Names: [Your Names]**
+## **📝 Student Names: Rabee, Kevin og Ermin**
 
 ---
 
@@ -111,43 +111,41 @@ DELIMITER ;
 - **Optimistic Concurrency Control (OCC)** using a **version column** in the `Tournaments` table.
 - **Pessimistic Concurrency Control (PCC)** using `SELECT ... FOR UPDATE` when updating `Matches`.
 
-### **Test Parameters:**
-| Parameter        | Value |
-|-----------------|-------|
-| **Number of concurrent transactions** | [Your Value] |
-| **Database** | [Your Value] |
-| **Execution Environment** | [Your Value] |
-| **Java Thread Pool Size** | [Your Value] |
+### Test Parameters:
+
+| Parameter                         | Value  |
+|-----------------------------------|--------|
+| Number of concurrent transactions | 100    |
+| Database                          | mySQL  |
+| Execution Environment             | Window |
+| Python threading                  | Python |
+
 
 ---
 
 ## **📌 Results & Observations**
 
 ### **1️⃣ Optimistic Concurrency Control (OCC) Results**
-**Test Scenario:** [Describe how OCC was tested]
 
-| **Metric** | **Value** |
-|-----------|----------|
-| Execution Time (ms) | [Your Value] |
-| Number of successful transactions | [Your Value] |
-| Number of retries due to version mismatch | [Your Value] |
-
-**Observations:**
-- [Summarize key findings related to OCC]
+### Optimistic Concurrency Control (OCC) Results
+| Metric                                      | Value    |
+|---------------------------------------------|---------|
+| Execution Time (ms)                         | 16.01 sec |
+| Number of successful transactions          | 11      |
+| Number of retries due to version mismatch  | 89      |
 
 ---
 
 ### **2️⃣ Pessimistic Concurrency Control (PCC) Results**
-**Test Scenario:** [Describe how PCC was tested]
 
-| **Metric** | **Value** |
-|-----------|----------|
-| Execution Time (ms) | [Your Value] |
-| Number of successful transactions | [Your Value] |
-| Number of transactions that had to wait due to locks | [Your Value] |
+### Pessimistic Concurrency Control (PCC) Results
 
-**Observations:**
-- [Summarize key findings related to PCC]
+| Metric                                      | Value    |
+|---------------------------------------------|---------|
+| Execution Time (ms)                         | 9.14 sec |
+| Number of successful transactions          | 90      |
+| Number of retries due to version mismatch  | 10      |
+
 
 ---
 
@@ -158,17 +156,3 @@ DELIMITER ;
 | Lock Contention           | Ingen/lav (Ingen låse, men version-mismatch)      | Høj (Rækker er låst, ventetid øges)         |
 | Best Use Case              | Læs-tunge systemer (Få samtidige opdateringer, fx rapporter) | Skriv-tunge systemer (Hyppige opdateringer, fx banktransaktioner) |
 
-
----
-
-## **Performance Comparison Chart**
-_You *may* want to visualize your finding by including a  chart that illustrates the differences in execution time, successful transactions, and transactions with delays for OCC vs. PCC._
-
----
-
-## **📌 Conclusion & Recommendations**
-### **Key Findings:**
-- [Summarize overall findings and comparison of OCC vs. PCC]
-
-### **Final Recommendations:**
-- [Provide recommendations based on the test results]
