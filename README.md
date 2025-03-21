@@ -270,8 +270,8 @@ Hvis man skal tilføje en ny region, kan man bruge `ALTER TABLE` og manuelt tilf
 '-> Filter: ((sales.region = \'EU\') and (sales.sale_date between \'2023-01-01\' and \'2023-12-31\'))  (cost=0.35 rows=1) (actual time=0.0271..0.0271 rows=0 loops=1)\n    -> Table scan on Sales  (cost=0.35 rows=1) (actual time=0.0267..0.0267 rows=0 loops=1)\n'  
 
 Expected Outcome:
-The query scans the entire table.✅
-The rows examined count will be high, especially for large datasets.❓
+- The query scans the entire table.✅
+- The rows examined count will be high, especially for large datasets.❓
 
 
 ---
