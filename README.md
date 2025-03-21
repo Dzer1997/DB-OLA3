@@ -258,23 +258,32 @@ Hvis man skal tilføje en ny region, kan man bruge `ALTER TABLE` og manuelt tilf
 
 # 📌 1. Running Queries on Partitioned Data
 - **Without partition**
+- '-> Table scan on Sales  (cost=0.35 rows=1) (actual time=0.0071..0.0071 rows=0 loops=1)\n'
+  
 - **With partition**
+- '-> Table scan on Sales  (cost=0.85 rows=1) (actual time=0.0263..0.0263 rows=0 loops=1)\n'
+
 
 ---
 
 # 📌 2. Running EXPLAIN ANALYZE
 
-### Expected Outcome:
-✅ The query scans the entire table.  
-⁉️ The rows examined count will be high, especially for large datasets.  
+'-> Filter: ((sales.region = \'EU\') and (sales.sale_date between \'2023-01-01\' and \'2023-12-31\'))  (cost=0.35 rows=1) (actual time=0.0271..0.0271 rows=0 loops=1)\n    -> Table scan on Sales  (cost=0.35 rows=1) (actual time=0.0267..0.0267 rows=0 loops=1)\n'  
+
+Expected Outcome:
+The query scans the entire table.✅
+The rows examined count will be high, especially for large datasets.❓
+
 
 ---
 
 # 📌 3. Running EXPLAIN ANALYZE With Partition Selection
 
+'-> Filter: (sales.sale_date between \'2023-01-01\' and \'2023-12-31\')  (cost=0.35 rows=1) (actual time=0.0206..0.0206 rows=0 loops=1)\n    -> Table scan on Sales  (cost=0.35 rows=1) (actual time=0.0203..0.0203 rows=0 loops=1)\n'
+
 ### Expected Improvement:
-- The rows examined count should be significantly lower.  
-- The query execution time should be faster.  
+- The rows examined count should be significantly lower.❓  
+- The query execution time should be faster.✅  
 
 ---
 
