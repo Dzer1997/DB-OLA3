@@ -216,8 +216,7 @@ UPDATE Orders o
 JOIN Customers c ON o.customer_id = c.customer_id
 SET o.customer_name = c.name, o.customer_email = c.email;
 ```
-```sql
-```
+
 ## When would this denormalization be useful?
 Denormaliseringen gør, at vi ikke har et lige så stort behov for joins i vores database.  
 Det ville være nyttigt, når vi har kundedata, der ikke opdateres ofte.
